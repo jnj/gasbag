@@ -9,7 +9,7 @@ import org.apache.commons.configuration.PropertiesConfiguration
 
 case class SongInfo(artist: String, trackName: String, album: Option[String],
                     lengthInSeconds: Option[String], trackNum: Option[String],
-                    mbid: Option[String])
+                    mbid: Option[String], startPlayingTime: Int)
 
 class GasbagScrobbleSession(val sessionId: String,
                             val nowPlayingUrl: String,
@@ -70,6 +70,26 @@ class Gasbag {
     val lines = res.getPageSource.lines
     lines.next.trim == "OK"
   }
-  
+
+  def submit(session: GasbagScrobbleSession, song: SongInfo) = {
+    val p = new Prowser
+    val tab = p.createTab
+    val req = new Request(session.submissionUrl)
+    req.setHttpMethod("POST")
+    req.addParameter("s", session.sessionId)
+    req.addParameter("a[0]", song.artist)
+    req.addParameter("t[0]", song.trackName)
+    req.addParameter("i[0]", song.startPlayingTime.toString)
+    req.addParameter("o[0]", "P")
+    req.addParameter("r[0]", "")
+    req.addParameter("l[0]", song.lengthInSeconds.get)
+    req.addParameter("b[0]", song.album.getOrElse(""))
+    req.addParameter("n[0]", song.trackNum.getOrElse(""))
+    req.addParameter("m[0]", song.mbid.getOrElse(""))
+    val res = tab.go(req)
+    val lines = res.getPageSource.lines
+    lines.next.trim == "OK"
+  }
+
   def timestamp = new Date().getTime / 1000
 }
