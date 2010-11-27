@@ -1,0 +1,13 @@
+;; This config was generated using ensime-config-gen. Feel free to customize its contents manually. 
+
+(
+
+:project-name "gasbag"
+
+:server-root "/home/josh/elisp/ensime"
+
+:project-package "org.joshjoyce.gasbag"
+
+:use-sbt t
+
+)
