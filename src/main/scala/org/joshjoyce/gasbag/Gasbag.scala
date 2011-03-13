@@ -20,6 +20,28 @@ class GasbagScrobbleSession(val sessionId: String,
   }
 }
 
+object Gasbag {
+  def main(args: Array[String]) {
+    if (args.size >= 3) {
+      val fileSource = new ScrobbleFileSource(args.head)
+      val gb = new Gasbag
+      val session = gb.handshake(args(1), args(2))
+
+      if (!session.isDefined) {
+        println("Session was not obtained")
+        System.exit(1)
+      }
+        
+      fileSource.foreach {
+        gb.submit(session.get, _)
+      }
+    } else {
+      println("arguments: <file> <username> <password>")
+      System.exit(1)
+    }
+  }
+}
+
 class Gasbag {
   import scala.collection.JavaConversions._
 
