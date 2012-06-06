@@ -1,4 +1,6 @@
-lib_managed
+.idea
+.idea_modules
+lib
 target
 *~
 project/boot

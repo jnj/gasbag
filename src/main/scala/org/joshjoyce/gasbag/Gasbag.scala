@@ -1,7 +1,6 @@
 package org.joshjoyce.gasbag
 
-import com.zenkey.net.prowser._
-
+import dispatch._
 import java.util.Date
 
 import org.apache.commons.codec.digest.DigestUtils._
@@ -54,63 +53,67 @@ class Gasbag {
     val clientVersion = "1.0"
     val ts = timestamp
     val auth = md5Hex(md5Hex(pass) + ts.toString)
-    val hostPart = "http://post.audioscrobbler.com/"
-    val prowser = new Prowser
-    val tab = prowser.createTab
-    val req = new Request(hostPart)
-    req.addParameter("hs", "true")
-    req.addParameter("p", "1.2.1")
-    req.addParameter("c", clientId)
-    req.addParameter("v", clientVersion)
-    req.addParameter("u", user)
-    req.addParameter("t", ts.toString)
-    req.addParameter("a", auth)
-    req.addParameter("api_key", apiKey)
-    val response = tab.go(req)
-    
-    if (200 == response.getStatus) {
-      val text = response.getPageSource
-      val lines = text.trim.lines.drop(1).toList
-      Some(new GasbagScrobbleSession(lines(0), lines(1), lines(2)))
-    } else
-      None
+    val host = :/("post.audioscrobbler.com")
+    val h = new Http
+    val req = host <<? List(
+      ("hs", "true"),
+      ("p", "1.2.1"),
+      ("c", clientId),
+      ("v", clientVersion),
+      ("u", user),
+      ("t", ts.toString),
+      ("a", auth),
+      ("api_key", apiKey)
+    )
+
+    h(req >- {
+      body => {
+        val lines = body.lines.drop(1).toList
+        Some(new GasbagScrobbleSession(lines(0), lines(1), lines(2)))
+      }
+    })
   }
   
   def nowPlaying(session: GasbagScrobbleSession, song: SongInfo) = {
-    val p = new Prowser
-    val tab = p.createTab
-    val req = new Request(session.nowPlayingUrl)
-    req.setHttpMethod("POST")
-    req.addParameter("s", session.sessionId)
-    req.addParameter("a", song.artist)
-    req.addParameter("t", song.trackName)
-    req.addParameter("b", song.album.getOrElse(""))
-    req.addParameter("l", song.lengthInSeconds.getOrElse(""))
-    req.addParameter("n", song.trackNum.getOrElse(""))
-    req.addParameter("m", song.mbid.getOrElse(""))
-    val res = tab.go(req)
-    val lines = res.getPageSource.lines
-    lines.next.trim == "OK"
+    val h = new Http
+    val req = :/(session.nowPlayingUrl) << List(
+      ("s", session.sessionId),
+      ("a", song.artist),
+      ("t", song.trackName),
+      ("b", song.album.getOrElse("")),
+      ("l", song.lengthInSeconds.getOrElse("")),
+      ("n", song.trackNum.getOrElse("")),
+      ("m", song.mbid.getOrElse(""))
+    )
+    h(req >- {
+      body => {
+        val lines = body.lines
+        lines.next().trim == "OK"
+      }
+    })
   }
 
   def submit(session: GasbagScrobbleSession, song: SongInfo) = {
-    val p = new Prowser
-    val tab = p.createTab
-    val req = new Request(session.submissionUrl)
-    req.setHttpMethod("POST")
-    req.addParameter("s", session.sessionId)
-    req.addParameter("a[0]", song.artist)
-    req.addParameter("t[0]", song.trackName)
-    req.addParameter("i[0]", song.startPlayingTime.toString)
-    req.addParameter("o[0]", "P")
-    req.addParameter("r[0]", "")
-    req.addParameter("l[0]", song.lengthInSeconds.get)
-    req.addParameter("b[0]", song.album.getOrElse(""))
-    req.addParameter("n[0]", song.trackNum.getOrElse(""))
-    req.addParameter("m[0]", song.mbid.getOrElse(""))
-    val res = tab.go(req)
-    val lines = res.getPageSource.lines
-    lines.next.trim == "OK"
+    val h = new Http
+    val req = :/(session.submissionUrl) << List(
+      ("s", session.sessionId),
+      ("a[0]", song.artist),
+      ("t[0]", song.trackName),
+      ("i[0]", song.startPlayingTime.toString),
+      ("o[0]", "P"),
+      ("r[0]", ""),
+      ("l[0]", song.lengthInSeconds.get),
+      ("b[0]", song.album.getOrElse("")),
+      ("n[0]", song.trackNum.getOrElse("")),
+      ("m[0]", song.mbid.getOrElse(""))
+    )
+
+    h(req >- {
+      body => {
+        val lines = body.lines
+        lines.next().trim == "OK"
+      }
+    })
   }
 
   def timestamp = new Date().getTime / 1000
