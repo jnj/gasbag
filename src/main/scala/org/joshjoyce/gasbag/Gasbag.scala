@@ -76,7 +76,7 @@ class Gasbag {
   
   def nowPlaying(session: GasbagScrobbleSession, song: SongInfo) = {
     val h = new Http
-    val req = :/(session.nowPlayingUrl) << List(
+    val req = url(session.nowPlayingUrl) << List(
       ("s", session.sessionId),
       ("a", song.artist),
       ("t", song.trackName),
@@ -95,7 +95,7 @@ class Gasbag {
 
   def submit(session: GasbagScrobbleSession, song: SongInfo) = {
     val h = new Http
-    val req = :/(session.submissionUrl) << List(
+    val req = url(session.submissionUrl) << List(
       ("s", session.sessionId),
       ("a[0]", song.artist),
       ("t[0]", song.trackName),
