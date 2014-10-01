@@ -1,8 +1,2 @@
 Gasbag is a scrobbling library for JVM languages. It is written in Scala.
 Before using, configure by editing lastfm.properties.
-
-Note:
-
-Handshake and Now Playing are working in this library, but it is still
-experimental. It is currently using the test-only client ID of "tst",
-so do not use for production work as is.
