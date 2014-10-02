@@ -1,6 +1,6 @@
 package org.joshjoyce.gasbag
 
-import dispatch._
+import dispatch.classic._
 import java.util.Date
 
 import org.apache.commons.codec.digest.DigestUtils._
@@ -14,7 +14,7 @@ class GasbagScrobbleSession(val sessionId: String,
                             val nowPlayingUrl: String,
                             val submissionUrl: String) {
   
-  override def toString() = {
+  override def toString = {
     "%s / %s / %s".format(sessionId, nowPlayingUrl, submissionUrl)
   }
 }
@@ -42,8 +42,6 @@ object Gasbag {
 }
 
 class Gasbag {
-  import scala.collection.JavaConversions._
-
   val config = new PropertiesConfiguration("lastfm.properties")
   val apiKey = config.getString("api-key")
   val apiSecret = config.getString("api-secret")
@@ -85,7 +83,7 @@ class Gasbag {
       ("n", song.trackNum.getOrElse("")),
       ("m", song.mbid.getOrElse(""))
     )
-    h(req >- {
+    Http(req >- {
       body => {
         val lines = body.lines
         lines.next().trim == "OK"
@@ -108,12 +106,13 @@ class Gasbag {
       ("m[0]", song.mbid.getOrElse(""))
     )
 
-    h(req >- {
+    val hand = req >- {
       body => {
         val lines = body.lines
         lines.next().trim == "OK"
       }
-    })
+    }
+    Http(hand)
   }
 
   def timestamp = new Date().getTime / 1000
